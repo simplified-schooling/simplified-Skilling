@@ -20,7 +20,7 @@ const envVarsSchema = Joi.object()
       is: 'test',
       then: Joi.required(),
     }),
-    // MONGODB_URL_PROD: Joi.string().required().description('Mongo DB url'),
+    MONGODB_URL_PROD: Joi.string().required().description('Mongo DB url'),
     JWT_SECRET: Joi.string().required().description('JWT secret key'),
     JWT_ACCESS_EXPIRATION_MINUTES: Joi.number().default(30).description('minutes after which access tokens expire'),
     JWT_REFRESH_EXPIRATION_DAYS: Joi.number().default(30).description('days after which refresh tokens expire'),
@@ -56,9 +56,9 @@ module.exports = {
     url: (() => {
       switch (envVars.NODE_ENV) {
         case 'development':
-          return envVars.MONGODB_URL_DEV || 'mongodb://127.0.0.1:27017/Lms_Simplified_Schooling';
+          return envVars.MONGODB_URL_DEV || 'mongodb://127.0.0.1:27017/simplified_Skilling';
         case 'production':
-          return envVars.MONGODB_URL_PROD || 'mongodb://127.0.0.1:27017/Lms_Simplified_Schooling';
+          return envVars.MONGODB_URL_PROD || 'mongodb://127.0.0.1:27017/simplified_Skilling';
         case 'test':
           return `${envVars.MONGODB_URL_DEV}-test` || 'mongodb://127.0.0.1:27017/Lms_Simplified_Schooling-test';
         default:
