@@ -115,12 +115,8 @@ const deleteBookById = async (bookId) => {
     throw new ApiError(httpStatus.NOT_FOUND, 'Subject not found');
   }
   // Extract file names from URLs
-  const extractFileKey = (url) => {
-    if (!url) return null;
-    const match = url.match(/\.com\/(.+)$/);
-    return match ? decodeURIComponent(match[1]) : null;
-  };  const thumbnailKey = extractFileKey(book.thumbnail);
-  const posterKey = extractFileKey(book.poster);
+const extractFileName = (url) => (url ? url.split('/').pop() : null);  const thumbnailKey = extractFileName(book.thumbnail);
+  const posterKey = extractFileName(book.poster);
 
   const deleteFileFromCDN = async (key) => {
     if (!key) return;

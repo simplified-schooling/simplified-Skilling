@@ -18,16 +18,30 @@ const s3Client = new S3Client({
   },
 });
 
+// const upload = multer({
+//   storage: multerS3({
+//     s3: s3Client,
+//     bucket: 'simplifiedskilling',
+//     acl: 'public-read',
+//     metadata(req, file, cb) {
+//       cb(null, { fieldName: file.fieldname }); // Set any metadata you want to associate with the uploaded file
+//     },
+//     key(req, file, cb) {
+//       cb(null, `${Date.now().toString()}-${file.originalname}`); // Set the key (filename) for the uploaded file
+//     },
+//   }),
+// });
 const upload = multer({
   storage: multerS3({
     s3: s3Client,
     bucket: 'simplifiedskilling',
     acl: 'public-read',
     metadata(req, file, cb) {
-      cb(null, { fieldName: file.fieldname }); // Set any metadata you want to associate with the uploaded file
+      cb(null, { fieldName: file.fieldname });
     },
     key(req, file, cb) {
-      cb(null, `${Date.now().toString()}-${file.originalname}`); // Set the key (filename) for the uploaded file
+      const safeFileName = file.originalname.replace(/\s+/g, '_'); // Replace spaces with underscores
+      cb(null, `${Date.now()}-${safeFileName}`);
     },
   }),
 });
