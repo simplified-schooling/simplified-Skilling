@@ -159,7 +159,7 @@ const updateChapterById = async (chapterId, updateBody) => {
 //     if (!key) return;
 //     try {
 //       const params = {
-//         Bucket: 'lmscontent', // Your bucket name
+//         Bucket: 'simplifiedskilling', // Your bucket name
 //         Key: key, // File key (filename in the bucket)
 //       };
 //       await s3Client.send(new DeleteObjectCommand(params));
@@ -214,7 +214,7 @@ const deleteChapterById = async (chapterId) => {
     if (!key) return;
     try {
       const params = {
-        Bucket: 'lmscontent',
+        Bucket: 'simplifiedskilling',
         Key: key,
       };
       await s3Client.send(new DeleteObjectCommand(params));
