@@ -185,14 +185,18 @@ const deleteChapterById = async (chapterId) => {
   }
 
   // Extract file name from URL
-  const extractFileName = (url) => (url ? url.split('/').pop() : null);
+  const extractFileKey = (url) => {
+    if (!url) return null;
+    const match = url.match(/\.com\/(.+)$/);
+    return match ? match[1] : null;
+  };
 
   // Collect all file keys to delete
   const fileKeys = [];
 
   // Main thumbnail and poster
-  fileKeys.push(extractFileName(chapter.thumbnail));
-  fileKeys.push(extractFileName(chapter.poster));
+  fileKeys.push(extractFileKey(chapter.thumbnail));
+  fileKeys.push(extractFileKey(chapter.poster));
 
   // Section fields to check
   const sections = [
@@ -204,8 +208,8 @@ const deleteChapterById = async (chapterId) => {
 
   sections.forEach((section) => {
     if (chapter[section]) {
-      fileKeys.push(extractFileName(chapter[section].poster));
-      fileKeys.push(extractFileName(chapter[section].icon));
+      fileKeys.push(extractFileKey(chapter[section].poster));
+      fileKeys.push(extractFileKey(chapter[section].icon));
     }
   });
 
