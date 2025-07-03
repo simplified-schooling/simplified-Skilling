@@ -173,60 +173,107 @@ const updateChapterById = async (chapterId, updateBody) => {
 //   await chapter.remove();
 //   return chapter;
 // };
-/**
- * Delete Chapter by id
- * @param {ObjectId} chapterId
- * @returns {Promise<Chapter>}
- */
+
+// /**
+//  * Delete Chapter by id
+//  * @param {ObjectId} chapterId
+//  * @returns {Promise<Chapter>}
+//  */
+// const deleteChapterById = async (chapterId) => {
+//   const chapter = await getChapterById(chapterId);
+//   if (!chapter) {
+//     throw new ApiError(httpStatus.NOT_FOUND, 'Chapter not found');
+//   }
+
+//   // Extract file name from URL
+// const extractFileName = (url) => (url ? url.split('/').pop() : null);
+//   // Collect all file keys to delete
+//   const fileKeys = [];
+
+//   // Main thumbnail and poster
+//   fileKeys.push(extractFileName(chapter.thumbnail));
+//   fileKeys.push(extractFileName(chapter.poster));
+
+//   // Section fields to check
+//   const sections = [
+//     'ebook',
+//     'quickRecap',
+//     'bookQuestionSolutions',
+//     'chapterEvaluation',
+//   ];
+
+//   sections.forEach((section) => {
+//     if (chapter[section]) {
+//       fileKeys.push(extractFileName(chapter[section].poster));
+//       fileKeys.push(extractFileName(chapter[section].icon));
+//     }
+//   });
+
+//   // Function to delete from S3
+//   const deleteFileFromCDN = async (key) => {
+//     if (!key) return;
+//     try {
+//       const params = {
+//         Bucket: 'simplifiedskilling',
+//         Key: key,
+//       };
+//       await s3Client.send(new DeleteObjectCommand(params));
+//     } catch (error) {
+//       // Optional: log error
+//       // console.error(`Error deleting ${key}:`, error);
+//     }
+//   };
+
+//   // Delete all files concurrently
+//   await Promise.all(fileKeys.map(deleteFileFromCDN));
+
+//   // Remove the chapter
+//   await chapter.remove();
+//   return chapter;
+// };
 const deleteChapterById = async (chapterId) => {
   const chapter = await getChapterById(chapterId);
   if (!chapter) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Chapter not found');
   }
 
-  // Extract file name from URL
-const extractFileName = (url) => (url ? url.split('/').pop() : null);
-  // Collect all file keys to delete
+  // ✅ Extract full file key from URL
+  const extractFileKey = (url) => {
+    if (!url) return null;
+    const match = url.match(/\.com\/(.+)$/);
+    return match ? decodeURIComponent(match[1]) : null;
+  };
+
   const fileKeys = [];
 
   // Main thumbnail and poster
-  fileKeys.push(extractFileName(chapter.thumbnail));
-  fileKeys.push(extractFileName(chapter.poster));
+  fileKeys.push(extractFileKey(chapter.thumbnail));
+  fileKeys.push(extractFileKey(chapter.poster));
 
   // Section fields to check
-  const sections = [
-    'ebook',
-    'quickRecap',
-    'bookQuestionSolutions',
-    'chapterEvaluation',
-  ];
+  const sections = ['ebook', 'quickRecap', 'bookQuestionSolutions', 'chapterEvaluation'];
 
   sections.forEach((section) => {
     if (chapter[section]) {
-      fileKeys.push(extractFileName(chapter[section].poster));
-      fileKeys.push(extractFileName(chapter[section].icon));
+      fileKeys.push(extractFileKey(chapter[section].poster));
+      fileKeys.push(extractFileKey(chapter[section].icon));
     }
   });
 
-  // Function to delete from S3
   const deleteFileFromCDN = async (key) => {
     if (!key) return;
     try {
-      const params = {
+      await s3Client.send(new DeleteObjectCommand({
         Bucket: 'simplifiedskilling',
         Key: key,
-      };
-      await s3Client.send(new DeleteObjectCommand(params));
+      }));
     } catch (error) {
-      // Optional: log error
-      // console.error(`Error deleting ${key}:`, error);
+      console.error(`Error deleting ${key}:`, error.message);
     }
   };
 
-  // Delete all files concurrently
   await Promise.all(fileKeys.map(deleteFileFromCDN));
 
-  // Remove the chapter
   await chapter.remove();
   return chapter;
 };
