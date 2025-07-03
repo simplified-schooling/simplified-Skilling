@@ -11,7 +11,7 @@ router
   .route('/')
   .post(
     auth('CREATE'),
-    createS3Middleware('lmscontent'),
+    createS3Middleware('simplifiedskilling'),
     validate(demolishedValidation.createDemolished),
     demolishedController.createDemolished
   )
@@ -23,7 +23,7 @@ router
   .get(auth('GET'), validate(demolishedValidation.getDemolishedById), demolishedController.getDemolishedById)
   .patch(
     auth('UPDATE'),
-    createS3Middleware('lmscontent'),
+    createS3Middleware('simplifiedskilling'),
     validate(demolishedValidation.updateDemolishedById),
     demolishedController.updateDemolishedById
   )

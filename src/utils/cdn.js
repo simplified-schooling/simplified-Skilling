@@ -4,7 +4,7 @@ const multerS3 = require('multer-s3');
 const config = require('../config/config');
 
 // Set S3 endpoint to DigitalOcean Spaces
-// const spacesEndpoint = 'https://lmscontent-cdn.blr1.digitaloceanspaces.com';
+// const spacesEndpoint = 'https://simplifiedskilling-cdn.blr1.digitaloceanspaces.com';
 
 const spacesEndpoint = 'https://simplifiedskilling.blr1.digitaloceanspaces.com';
 
@@ -34,7 +34,7 @@ const upload = multer({
 // const upload = multer({
 //   storage: multerS3({
 //     s3: s3Client,
-//     bucket: 'lmscontent',
+//     bucket: 'simplifiedskilling',
 //     acl: 'public-read',
 //     contentType: multerS3.AUTO_CONTENT_TYPE,
 //     metadata(req, file, cb) {

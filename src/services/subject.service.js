@@ -163,7 +163,7 @@ const deleteSubjectById = async (subjectId) => {
     if (!key) return;
     try {
       const params = {
-        Bucket: 'lmscontent', // Your bucket name
+        Bucket: 'simplifiedskilling', // Your bucket name
         Key: key, // File key (filename in the bucket)
       };
       await s3Client.send(new DeleteObjectCommand(params));

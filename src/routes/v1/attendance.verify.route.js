@@ -9,7 +9,7 @@ const router = express.Router();
 router
   .route('/')
   .post(
-    createS3Middleware('lmscontent'),
+    createS3Middleware('simplifiedskilling'),
     validate(attendanceVerifyvalidation.createAVerify),
     attendanceVerifyController.createAttendanceVerify
   )
