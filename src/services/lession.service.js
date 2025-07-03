@@ -124,16 +124,12 @@ const deleteLessionById = async (lessonId) => {
 
   // Extract file name from URL
   // const extractFileName = (url) => (url ? url.split('/').pop() : null);
-  const extractFileKey = (url) => {
-    if (!url) return null;
-    const match = url.match(/\.com\/(.+)$/);
-    return match ? decodeURIComponent(match[1]) : null;
-  };  // Collect all file keys to delete
+const extractFileName = (url) => (url ? url.split('/').pop() : null);  // Collect all file keys to delete
   const fileKeys = [];
 
   // Main thumbnail and poster
-  fileKeys.push(extractFileKey(lesson.thumbnail));
-  fileKeys.push(extractFileKey(lesson.poster));
+  fileKeys.push(extractFileName(lesson.thumbnail));
+  fileKeys.push(extractFileName(lesson.poster));
 
   // Section fields to check
   const sections = [
@@ -148,8 +144,8 @@ const deleteLessionById = async (lessonId) => {
 
   sections.forEach((section) => {
     if (lesson[section]) {
-      fileKeys.push(extractFileKey(lesson[section].poster));
-      fileKeys.push(extractFileKey(lesson[section].icon));
+      fileKeys.push(extractFileName(lesson[section].poster));
+      fileKeys.push(extractFileName(lesson[section].icon));
     }
   });
 
