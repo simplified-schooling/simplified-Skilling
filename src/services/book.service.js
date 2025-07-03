@@ -118,9 +118,8 @@ const deleteBookById = async (bookId) => {
   const extractFileKey = (url) => {
     if (!url) return null;
     const match = url.match(/\.com\/(.+)$/);
-    return match ? match[1] : null;
-  };
-  const thumbnailKey = extractFileKey(book.thumbnail);
+    return match ? decodeURIComponent(match[1]) : null;
+  };  const thumbnailKey = extractFileKey(book.thumbnail);
   const posterKey = extractFileKey(book.poster);
 
   const deleteFileFromCDN = async (key) => {

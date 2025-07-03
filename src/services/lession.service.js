@@ -127,9 +127,8 @@ const deleteLessionById = async (lessonId) => {
   const extractFileKey = (url) => {
     if (!url) return null;
     const match = url.match(/\.com\/(.+)$/);
-    return match ? match[1] : null;
-  };
-  // Collect all file keys to delete
+    return match ? decodeURIComponent(match[1]) : null;
+  };  // Collect all file keys to delete
   const fileKeys = [];
 
   // Main thumbnail and poster

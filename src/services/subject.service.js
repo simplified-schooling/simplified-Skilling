@@ -159,9 +159,8 @@ const deleteSubjectById = async (subjectId) => {
    const extractFileKey = (url) => {
     if (!url) return null;
     const match = url.match(/\.com\/(.+)$/);
-    return match ? match[1] : null;
-  };
-  const thumbnailKey = extractFileKey(subjectData.thumbnail);
+    return match ? decodeURIComponent(match[1]) : null;
+  };  const thumbnailKey = extractFileKey(subjectData.thumbnail);
   const posterKey = extractFileKey(subjectData.poster);
 
   const deleteFileFromCDN = async (key) => {

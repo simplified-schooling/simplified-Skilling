@@ -106,17 +106,56 @@ const updateClassById = async (classId, updateBody) => {
 //   await classData.remove();
 //   return classData;
 // };
+// const deleteClassById = async (classId) => {
+//   const classData = await Classes.findById(classId);
+//   if (!classData) {
+//     throw new ApiError(httpStatus.NOT_FOUND, 'Class not found');
+//   }
+
+//   // ✅ Extract full S3 key from URL
+  // const extractFileKey = (url) => {
+  //   if (!url) return null;
+  //   const match = url.match(/\.com\/(.+)$/);
+  //   return match ? match[1] : null;
+  // };
+
+//   const thumbnailKey = extractFileKey(classData.thumbnail);
+//   const posterKey = extractFileKey(classData.poster);
+
+//   const deleteFileFromCDN = async (key) => {
+//     if (!key) return;
+//     try {
+//       const params = {
+//         Bucket: 'simplifiedskilling',
+//         Key: key,
+//       };
+//       await s3Client.send(new DeleteObjectCommand(params));
+//     } catch (error) {
+//       console.error(`Error deleting ${key}:`, error);
+//     }
+//   };
+
+//   // Delete both files from DigitalOcean
+//   await Promise.all([
+//     deleteFileFromCDN(thumbnailKey),
+//     deleteFileFromCDN(posterKey),
+//   ]);
+
+//   // Delete class from MongoDB
+//   await classData.remove();
+//   return classData;
+// };
 const deleteClassById = async (classId) => {
   const classData = await Classes.findById(classId);
   if (!classData) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Class not found');
   }
 
-  // ✅ Extract full S3 key from URL
+  // ✅ Extract correct key (including folder prefix) and decode
   const extractFileKey = (url) => {
     if (!url) return null;
     const match = url.match(/\.com\/(.+)$/);
-    return match ? match[1] : null;
+    return match ? decodeURIComponent(match[1]) : null;
   };
 
   const thumbnailKey = extractFileKey(classData.thumbnail);
@@ -129,9 +168,10 @@ const deleteClassById = async (classId) => {
         Bucket: 'simplifiedskilling',
         Key: key,
       };
-      await s3Client.send(new DeleteObjectCommand(params));
+      const result = await s3Client.send(new DeleteObjectCommand(params));
+
     } catch (error) {
-      console.error(`Error deleting ${key}:`, error);
+
     }
   };
 
@@ -145,7 +185,6 @@ const deleteClassById = async (classId) => {
   await classData.remove();
   return classData;
 };
-
 module.exports = {
   createClasses,
   getAllClasses,
