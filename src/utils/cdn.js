@@ -4,8 +4,9 @@ const multerS3 = require('multer-s3');
 const config = require('../config/config');
 
 // Set S3 endpoint to DigitalOcean Spaces
-const spacesEndpoint = 'https://lmscontent-cdn.blr1.digitaloceanspaces.com';
+// const spacesEndpoint = 'https://lmscontent-cdn.blr1.digitaloceanspaces.com';
 
+const spacesEndpoint = 'https://simplifiedskilling.blr1.digitaloceanspaces.com';
 
 const s3Client = new S3Client({
   forcePathStyle: true,
@@ -20,7 +21,7 @@ const s3Client = new S3Client({
 const upload = multer({
   storage: multerS3({
     s3: s3Client,
-    bucket: 'lmscontent',
+    bucket: 'simplifiedskilling',
     acl: 'public-read',
     metadata(req, file, cb) {
       cb(null, { fieldName: file.fieldname }); // Set any metadata you want to associate with the uploaded file
@@ -30,7 +31,22 @@ const upload = multer({
     },
   }),
 });
-
+// const upload = multer({
+//   storage: multerS3({
+//     s3: s3Client,
+//     bucket: 'lmscontent',
+//     acl: 'public-read',
+//     contentType: multerS3.AUTO_CONTENT_TYPE,
+//     metadata(req, file, cb) {
+//       cb(null, { fieldName: file.fieldname });
+//     },
+//     key(req, file, cb) {
+//       const name = file.originalname || `file-${Date.now()}.jpg`;
+//       cb(null, `uploads/${Date.now()}-${name}`);
+//     },
+//   }),
+// });
+ 
 const uploadImages = (req, res, next) => {
   upload.fields([
     { name: 'image1', maxCount: 1 },
