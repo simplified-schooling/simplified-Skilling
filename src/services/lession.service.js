@@ -124,43 +124,61 @@ const deleteLessionById = async (lessonId) => {
 
   // Extract file name from URL
   // const extractFileName = (url) => (url ? url.split('/').pop() : null);
-const extractFileName = (url) => (url ? url.split('/').pop() : null);  // Collect all file keys to delete
-  const fileKeys = [];
+  const extractFileKey = (url) => {
+    if (!url) return null;
+    const match = url.match(/\.com\/(.+)$/);
+    return match ? decodeURIComponent(match[1]) : null;
+  };
 
+  //const fileKeys = [];
+  const fileKeys = [
+    extractFileKey(lesson.thumbnail),
+    extractFileKey(lesson.poster),
+    ...[  'videoLectures',
+    'selfEvaluation',
+    'practiceTest',
+    'caseStudy',
+    'quickRecap',
+    'questionAndAnswers',]
+      .flatMap(section =>
+        lesson[section]
+          ? [extractFileKey(lesson[section].poster), extractFileKey(lesson[section].icon)]
+          : []
+      ),
+  ];
   // Main thumbnail and poster
   fileKeys.push(extractFileName(lesson.thumbnail));
   fileKeys.push(extractFileName(lesson.poster));
 
   // Section fields to check
-  const sections = [
-    'videoLectures',
-    //'multimediaVideos',
-    'selfEvaluation',
-    'practiceTest',
-    'caseStudy',
-    'quickRecap',
-    'questionAndAnswers',
-  ];
+  // const sections = [
+  //   'videoLectures',
+  //   //'multimediaVideos',
+  //   'selfEvaluation',
+  //   'practiceTest',
+  //   'caseStudy',
+  //   'quickRecap',
+  //   'questionAndAnswers',
+  // ];
 
-  sections.forEach((section) => {
-    if (lesson[section]) {
-      fileKeys.push(extractFileName(lesson[section].poster));
-      fileKeys.push(extractFileName(lesson[section].icon));
-    }
-  });
+  // sections.forEach((section) => {
+  //   if (lesson[section]) {
+  //     fileKeys.push(extractFileName(lesson[section].poster));
+  //     fileKeys.push(extractFileName(lesson[section].icon));
+  //   }
+  // });
 
   // Function to delete from S3
+
   const deleteFileFromCDN = async (key) => {
     if (!key) return;
     try {
-      const params = {
-        Bucket: 'simplifiedskilling', // your S3 bucket name
+      await s3Client.send(new DeleteObjectCommand({
+        Bucket: 'simplifiedskilling',
         Key: key,
-      };
-      await s3Client.send(new DeleteObjectCommand(params));
+      }));
     } catch (error) {
-      // Optional: log error but don't stop execution
-      // console.error(`Error deleting ${key}:`, error);
+      console.error(`Error deleting ${key}:`, error.message);
     }
   };
 
