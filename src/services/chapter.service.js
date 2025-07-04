@@ -1,8 +1,9 @@
 const httpStatus = require('http-status');
 const mongoose = require('mongoose');
-const { DeleteObjectCommand } = require('@aws-sdk/client-s3');
+// const { DeleteObjectCommand } = require('@aws-sdk/client-s3');
 const { Chapter } = require('../models');
 const ApiError = require('../utils/ApiError');
+const { DeleteObjectCommand, S3Client } = require('@aws-sdk/client-s3');
 
 /**
  * Create a chapter
@@ -231,52 +232,53 @@ const updateChapterById = async (chapterId, updateBody) => {
 //   await chapter.remove();
 //   return chapter;
 // };
-const deleteChapterById = async (chapterId) => {
-  const chapter = await getChapterById(chapterId);
-  if (!chapter) {
-    throw new ApiError(httpStatus.NOT_FOUND, 'Chapter not found');
-  }
 
-  // ✅ Extract full file key from URL
-  const extractFileKey = (url) => {
-    if (!url) return null;
-    const match = url.match(/\.com\/(.+)$/);
-    return match ? decodeURIComponent(match[1]) : null;
-  };
+// const deleteChapterById = async (chapterId) => {
+//   const chapter = await getChapterById(chapterId);
+//   if (!chapter) {
+//     throw new ApiError(httpStatus.NOT_FOUND, 'Chapter not found');
+//   }
 
-  const fileKeys = [];
+//   // ✅ Extract full file key from URL
+//   const extractFileKey = (url) => {
+//     if (!url) return null;
+//     const match = url.match(/\.com\/(.+)$/);
+//     return match ? decodeURIComponent(match[1]) : null;
+//   };
 
-  // Main thumbnail and poster
-  fileKeys.push(extractFileKey(chapter.thumbnail));
-  fileKeys.push(extractFileKey(chapter.poster));
+//   const fileKeys = [];
 
-  // Section fields to check
-  const sections = ['ebook', 'quickRecap', 'bookQuestionSolutions', 'chapterEvaluation'];
+//   // Main thumbnail and poster
+//   fileKeys.push(extractFileKey(chapter.thumbnail));
+//   fileKeys.push(extractFileKey(chapter.poster));
 
-  sections.forEach((section) => {
-    if (chapter[section]) {
-      fileKeys.push(extractFileKey(chapter[section].poster));
-      fileKeys.push(extractFileKey(chapter[section].icon));
-    }
-  });
+//   // Section fields to check
+//   const sections = ['ebook', 'quickRecap', 'bookQuestionSolutions', 'chapterEvaluation'];
 
-  const deleteFileFromCDN = async (key) => {
-    if (!key) return;
-    try {
-      await s3Client.send(new DeleteObjectCommand({
-        Bucket: 'simplifiedskilling',
-        Key: key,
-      }));
-    } catch (error) {
-      console.error(`Error deleting ${key}:`, error.message);
-    }
-  };
+//   sections.forEach((section) => {
+//     if (chapter[section]) {
+//       fileKeys.push(extractFileKey(chapter[section].poster));
+//       fileKeys.push(extractFileKey(chapter[section].icon));
+//     }
+//   });
 
-  await Promise.all(fileKeys.map(deleteFileFromCDN));
+//   const deleteFileFromCDN = async (key) => {
+//     if (!key) return;
+//     try {
+//       await s3Client.send(new DeleteObjectCommand({
+//         Bucket: 'simplifiedskilling',
+//         Key: key,
+//       }));
+//     } catch (error) {
+//       console.error(`Error deleting ${key}:`, error.message);
+//     }
+//   };
 
-  await chapter.remove();
-  return chapter;
-};
+//   await Promise.all(fileKeys.map(deleteFileFromCDN));
+
+//   await chapter.remove();
+//   return chapter;
+// };
 
 const getChapterListByFilter = async (boardId, mediumId, classId, subjectId, bookId, search, options) => {
   const filter = {};
@@ -297,6 +299,56 @@ const getChapterListByFilter = async (boardId, mediumId, classId, subjectId, boo
   return Chapter.paginate(filter, options);
 };
 
+// ✅ Correct DigitalOcean endpoint
+const s3Client = new S3Client({
+  endpoint: 'https://blr1.digitaloceanspaces.com', // ✅ DO NOT use CDN endpoint here
+  region: 'blr1',
+  credentials: {
+    accessKeyId: 'DO801BZNF48AH37WUGWK',
+    secretAccessKey: 'kp374u2BqIgiKMIUtu5n6tva57++whRRs9sGoI43YEc',
+  },
+});
+
+const deleteChapterById = async (chapterId) => {
+  const chapter = await getChapterById(chapterId);
+  if (!chapter) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Chapter not found');
+  }
+
+  const extractFileKey = (url) => {
+    if (!url) return null;
+    const match = url.match(/\.com\/(.+)$/);
+    return match ? decodeURIComponent(match[1]) : null;
+  };
+
+  const fileKeys = [
+    extractFileKey(chapter.thumbnail),
+    extractFileKey(chapter.poster),
+    ...['ebook', 'quickRecap', 'bookQuestionSolutions', 'chapterEvaluation']
+      .flatMap(section =>
+        chapter[section]
+          ? [extractFileKey(chapter[section].poster), extractFileKey(chapter[section].icon)]
+          : []
+      ),
+  ];
+
+  const deleteFileFromCDN = async (key) => {
+    if (!key) return;
+    try {
+      await s3Client.send(new DeleteObjectCommand({
+        Bucket: 'simplifiedskilling',
+        Key: key,
+      }));
+    } catch (error) {
+      console.error(`Error deleting ${key}:`, error.message);
+    }
+  };
+
+  await Promise.all(fileKeys.map(deleteFileFromCDN));
+
+  await chapter.remove();
+  return chapter;
+};
 module.exports = {
   createChapter,
   getChapterById,
