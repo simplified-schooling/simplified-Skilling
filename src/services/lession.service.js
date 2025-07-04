@@ -140,25 +140,44 @@ const deleteLessionById = async (lessonId) => {
   };
 
   // ✅ Gather all possible file keys
-  const fileKeys = [
-    extractFileKey(lesson.thumbnail),
-    extractFileKey(lesson.poster),
-    ...[
-      'videoLectures',
-      'selfEvaluation',
-      'practiceTest',
-      'caseStudy',
-      'quickRecap',
-      'questionAndAnswers',
-    ].flatMap((section) =>
-      lesson[section]
-        ? [
-            extractFileKey(lesson[section].poster),
-            extractFileKey(lesson[section].icon),
-          ]
-        : []
-    ),
-  ];
+  // const fileKeys = [
+  //   extractFileKey(lesson.thumbnail),
+  //   extractFileKey(lesson.poster),
+  //   ...[
+  //     'videoLectures',
+  //     'selfEvaluation',
+  //     'practiceTest',
+  //     'caseStudy',
+  //     'quickRecap',
+  //     'questionAndAnswers',
+  //   ].flatMap((section) =>
+  //     lesson[section]
+  //       ? [
+  //           extractFileKey(lesson[section].poster),
+  //           extractFileKey(lesson[section].icon),
+  //         ]
+  //       : []
+  //   ),
+  // ];
+const fileKeys = [
+  extractFileKey(lesson.thumbnail),
+  extractFileKey(lesson.poster),
+  ...[
+    'videoLectures',
+    'selfEvaluation',
+    'practiceTest',
+    'caseStudy',
+    'quickRecap',
+    'questionAndAnswers',
+  ].flatMap((section) =>
+    lesson[section]
+      ? [
+          extractFileKey(lesson[section].poster),
+          extractFileKey(lesson[section].icon),
+        ]
+      : []
+  ),
+].filter(Boolean);
 
   // ✅ Delete files from CDN
   const deleteFileFromCDN = async (key) => {
@@ -176,8 +195,10 @@ const deleteLessionById = async (lessonId) => {
     }
   };
 
-  await Promise.all(fileKeys.map(deleteFileFromCDN));
-
+  // await Promise.all(fileKeys.map(deleteFileFromCDN));
+for (const key of fileKeys.filter(Boolean)) {
+  await deleteFileFromCDN(key);
+}
   // ✅ Remove lesson from DB
   await lesson.remove();
   return lesson;
