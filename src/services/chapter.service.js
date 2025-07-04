@@ -11,7 +11,7 @@ const { DeleteObjectCommand, S3Client } = require('@aws-sdk/client-s3');
  * @returns {Promise<Chapter>}
  */
 const createChapter = async (chapter) => {
- 
+
   return Chapter.create(chapter);
 };
 

@@ -1,8 +1,9 @@
 const httpStatus = require('http-status');
-const { DeleteObjectCommand } = require('@aws-sdk/client-s3');
+//const { DeleteObjectCommand } = require('@aws-sdk/client-s3');
 const { Lession } = require('../models');
 const ApiError = require('../utils/ApiError');
-const { s3Client } = require('../utils/cdn');
+const { DeleteObjectCommand, S3Client } = require('@aws-sdk/client-s3');
+
 
 /**
  * Create a lession
@@ -116,76 +117,68 @@ const updateLessionById = async (lessionId, updateBody) => {
  * @param {ObjectId} lessonId
  * @returns {Promise<Lesson>}
  */
+const s3Client = new S3Client({
+  endpoint: 'https://blr1.digitaloceanspaces.com',
+  region: 'blr1',
+  credentials: {
+    accessKeyId: 'DO801BZNF48AH37WUGWK',
+    secretAccessKey: 'kp374u2BqIgiKMIUtu5n6tva57++whRRs9sGoI43YEc',
+  },
+});
+
 const deleteLessionById = async (lessonId) => {
   const lesson = await getLessionById(lessonId);
   if (!lesson) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Lesson not found');
   }
 
-  // Extract file name from URL
-  // const extractFileName = (url) => (url ? url.split('/').pop() : null);
+  // ✅ Extract file key after ".com/"
   const extractFileKey = (url) => {
     if (!url) return null;
     const match = url.match(/\.com\/(.+)$/);
     return match ? decodeURIComponent(match[1]) : null;
   };
 
-  //const fileKeys = [];
+  // ✅ Gather all possible file keys
   const fileKeys = [
     extractFileKey(lesson.thumbnail),
     extractFileKey(lesson.poster),
-    ...[  'videoLectures',
-    'selfEvaluation',
-    'practiceTest',
-    'caseStudy',
-    'quickRecap',
-    'questionAndAnswers',]
-      .flatMap(section =>
-        lesson[section]
-          ? [extractFileKey(lesson[section].poster), extractFileKey(lesson[section].icon)]
-          : []
-      ),
+    ...[
+      'videoLectures',
+      'selfEvaluation',
+      'practiceTest',
+      'caseStudy',
+      'quickRecap',
+      'questionAndAnswers',
+    ].flatMap((section) =>
+      lesson[section]
+        ? [
+            extractFileKey(lesson[section].poster),
+            extractFileKey(lesson[section].icon),
+          ]
+        : []
+    ),
   ];
-  // Main thumbnail and poster
-  fileKeys.push(extractFileKey(lesson.thumbnail));
-  fileKeys.push(extractFileKey(lesson.poster));
 
-  // Section fields to check
-  // const sections = [
-  //   'videoLectures',
-  //   //'multimediaVideos',
-  //   'selfEvaluation',
-  //   'practiceTest',
-  //   'caseStudy',
-  //   'quickRecap',
-  //   'questionAndAnswers',
-  // ];
-
-  // sections.forEach((section) => {
-  //   if (lesson[section]) {
-  //     fileKeys.push(extractFileName(lesson[section].poster));
-  //     fileKeys.push(extractFileName(lesson[section].icon));
-  //   }
-  // });
-
-  // Function to delete from S3
-
+  // ✅ Delete files from CDN
   const deleteFileFromCDN = async (key) => {
     if (!key) return;
     try {
-      await s3Client.send(new DeleteObjectCommand({
-        Bucket: 'simplifiedskilling',
-        Key: key,
-      }));
+      await s3Client.send(
+        new DeleteObjectCommand({
+          Bucket: 'simplifiedskilling',
+          Key: key,
+        })
+      );
+      console.log(`✅ Deleted: ${key}`);
     } catch (error) {
-      console.error(`Error deleting ${key}:`, error.message);
+      console.error(`❌ Error deleting ${key}:`, error.message);
     }
   };
 
-  // Delete all files concurrently
   await Promise.all(fileKeys.map(deleteFileFromCDN));
 
-  // Remove the lesson
+  // ✅ Remove lesson from DB
   await lesson.remove();
   return lesson;
 };
