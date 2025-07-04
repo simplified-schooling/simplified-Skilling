@@ -147,8 +147,8 @@ const deleteLessionById = async (lessonId) => {
       ),
   ];
   // Main thumbnail and poster
-  fileKeys.push(extractFileName(lesson.thumbnail));
-  fileKeys.push(extractFileName(lesson.poster));
+  fileKeys.push(extractFileKey(lesson.thumbnail));
+  fileKeys.push(extractFileKey(lesson.poster));
 
   // Section fields to check
   // const sections = [
